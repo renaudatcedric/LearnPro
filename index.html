@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#07070f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>LearnPro — Académie IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:#07070f;color:#e2e2f0;font-family:'DM Sans',sans-serif;font-size:15px}
+button{font-family:'DM Sans',sans-serif;cursor:pointer;border:none}
+input,textarea{font-family:'DM Sans',sans-serif;outline:none}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#1e1e30;border-radius:4px}
+
+/* ── VIEWS ── */
+#view-home,#view-chat{position:fixed;inset:0;display:flex;flex-direction:column;transition:transform .35s cubic-bezier(.4,0,.2,1)}
+#view-home{transform:translateX(0)}
+#view-chat{transform:translateX(100%)}
+.show-chat #view-home{transform:translateX(-100%)}
+.show-chat #view-chat{transform:translateX(0)}
+
+/* ── HOME ── */
+#view-home{overflow-y:auto;background:#07070f}
+.home-glow{position:fixed;top:-80px;left:50%;transform:translateX(-50%);width:500px;height:300px;background:radial-gradient(ellipse,#1a0e3a 0%,transparent 70%);pointer-events:none;z-index:0}
+
+.home-header{padding:28px 20px 10px;position:relative;z-index:1}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-diamond{font-size:20px;background:linear-gradient(135deg,#a78bfa,#fb923c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.brand-name{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;letter-spacing:-1px;background:linear-gradient(135deg,#f0f0ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.brand-sub{font-size:12px;color:#3a3a55;margin-top:3px;letter-spacing:.3px}
+
+.filter-bar{display:flex;gap:6px;padding:12px 20px 8px;overflow-x:auto;scrollbar-width:none;position:relative;z-index:1}
+.filter-bar::-webkit-scrollbar{display:none}
+.ftag{white-space:nowrap;padding:7px 14px;border-radius:20px;border:1px solid #1a1a28;background:#0c0c18;color:#555570;font-size:12px;font-weight:500;transition:.2s}
+.ftag.on{background:#180e38;border-color:#4c1d95;color:#c4b5fd}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 16px 80px;position:relative;z-index:1}
+
+.card{background:#0c0c18;border:1px solid #15152a;border-radius:18px;padding:16px 14px;text-align:left;transition:all .25s;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:5px}
+.card::after{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:var(--c,#6366f1);opacity:0;transition:.3s}
+.card:hover{border-color:color-mix(in srgb,var(--c,#6366f1) 35%,transparent);transform:translateY(-3px);box-shadow:0 10px 28px color-mix(in srgb,var(--c,#6366f1) 12%,transparent)}
+.card:hover::after{opacity:1}
+.card-tag{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--c,#6366f1);opacity:.9}
+.card-icon{font-size:28px;margin:4px 0}
+.card-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#e8e8f8;line-height:1.2}
+.card-desc{font-size:11px;color:#3a3a55;line-height:1.45;margin-top:1px}
+.vocal-badge{margin-top:6px;font-size:10px;background:#F59E0B18;color:#F59E0B;border:1px solid #F59E0B30;padding:3px 8px;border-radius:8px;width:fit-content}
+
+.add-card{border-style:dashed;border-color:#18182a;--c:#6366f1;justify-content:center;align-items:center;text-align:center;min-height:130px}
+.add-card:hover{border-color:#4c1d95}
+.add-plus{font-size:36px;color:#1e1e32;font-weight:300;line-height:1}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;z-index:200;padding:0}
+.modal-box{background:#0f0f1e;border:1px solid #1e1e30;border-radius:24px 24px 0 0;padding:28px 24px 36px;width:100%;max-width:480px;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:18px}
+.modal-input{width:100%;background:#111120;border:1px solid #1e1e30;border-radius:10px;padding:12px 14px;color:#e2e2f0;font-size:14px;margin-bottom:12px;display:block}
+.modal-label{font-size:11px;color:#44445a;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.icon-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.icon-pick{width:40px;height:40px;border-radius:10px;border:1px solid #1e1e30;background:#111120;font-size:18px;transition:.15s}
+.icon-pick.sel,.icon-pick:hover{border-color:#6d28d9;background:#1a1040}
+.color-grid{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.color-dot{width:28px;height:28px;border-radius:50%;border:2px solid transparent;transition:.15s;cursor:pointer}
+.color-dot.sel{border-color:#fff;transform:scale(1.2)}
+.modal-row{display:flex;gap:10px}
+.modal-cancel{flex:1;background:#111120;border:1px solid #1e1e30;color:#666;padding:12px;border-radius:10px}
+.modal-ok{flex:2;background:linear-gradient(135deg,#3730a3,#6d28d9);color:#fff;padding:12px;border-radius:10px;font-weight:600;font-size:15px}
+.modal-ok:disabled{opacity:.3}
+
+/* ── CHAT ── */
+#view-chat{background:#07070f}
+.chat-top{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #0f0f1e;flex-shrink:0}
+.back-btn{width:36px;height:36px;border-radius:10px;border:1px solid #1a1a28;background:#0c0c18;color:#888;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chat-title-wrap{flex:1;min-width:0}
+.chat-av-title{display:flex;align-items:center;gap:8px}
+.chat-av{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.chat-label{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-sublabel{font-size:11px;color:#3a3a55}
+.top-actions{display:flex;gap:6px;flex-shrink:0}
+.top-btn{width:34px;height:34px;border-radius:10px;border:1px solid #1a1a28;background:#0c0c18;font-size:15px;display:flex;align-items:center;justify-content:center}
+.top-btn.stop{background:#180808;border-color:#3a1010;color:#f87171}
+.top-btn.weak-btn{background:#0f1800;border-color:#2a3a00;color:#a3e635}
+
+.weak-panel{margin:0 14px 2px;background:#0a120a;border:1px solid #162016;border-radius:12px;padding:12px 14px;flex-shrink:0}
+.weak-head{font-size:11px;font-weight:700;color:#4ade80;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.weak-item{font-size:12px;color:#86efac;margin-bottom:5px;line-height:1.5;display:flex;gap:6px}
+.weak-dot{color:#4ade80;flex-shrink:0}
+.weak-empty{font-size:12px;color:#2a2a3a;font-style:italic}
+
+.chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px}
+.msg-row{display:flex;gap:8px;align-items:flex-end}
+.msg-row.user{flex-direction:row-reverse}
+.msg-ava{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.bubble{background:#111120;border-radius:18px;padding:11px 15px;font-size:14px;line-height:1.65;max-width:84%;color:#d0d0e8;white-space:pre-wrap;word-break:break-word}
+.msg-row.user .bubble{background:linear-gradient(135deg,#1e1040,#2d1a62);color:#ddd8ff;border-radius:18px 18px 4px 18px}
+.msg-row.assistant .bubble{border-radius:18px 18px 18px 4px}
+.coach-note{color:#fbbf24;font-weight:600;font-size:13px}
+.progress-note{color:#34d399;font-weight:600;font-size:13px}
+
+.typing-dots{display:flex;gap:5px;align-items:center;padding:14px 18px!important}
+.typing-dots span{width:7px;height:7px;background:#2a2a42;border-radius:50%;animation:bop .85s infinite}
+.typing-dots span:nth-child(2){animation-delay:.14s}
+.typing-dots span:nth-child(3){animation-delay:.28s}
+@keyframes bop{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-7px)}}
+
+.chat-bar{display:flex;gap:8px;padding:10px 14px 24px;border-top:1px solid #0f0f1e;flex-shrink:0;align-items:center;background:#07070f}
+.mic-btn{width:44px;height:44px;border-radius:14px;border:1px solid #1a1a28;background:#0c0c18;font-size:19px;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;transition:.2s}
+.mic-btn.live{background:#180808;border-color:#dc2626}
+.pulse{position:absolute;inset:0;border-radius:14px;border:2px solid #ef4444;animation:pulse .9s infinite}
+@keyframes pulse{0%{transform:scale(1);opacity:.9}100%{transform:scale(1.35);opacity:0}}
+.bar-input{flex:1;background:#0f0f1e;border:1px solid #1a1a28;border-radius:14px;padding:12px 14px;color:#e2e2f0;font-size:14px}
+.bar-input:focus{border-color:#2d1a60}
+.send-btn{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#3730a3,#6d28d9);color:#fff;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.2s}
+.send-btn:disabled{opacity:.25}
+
+/* ── RESPONSIVE ── */
+@media(min-width:520px){
+  #view-home,#view-chat{max-width:480px;left:50%;right:auto;transform:translateX(-50%)}
+  .show-chat #view-home{transform:translateX(calc(-50% - 100vw))}
+  .show-chat #view-chat{transform:translateX(-50%)}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HOME ═══ -->
+<div id="view-home">
+  <div class="home-glow"></div>
+  <div class="home-header">
+    <div class="brand">
+      <span class="brand-diamond">◆</span>
+      <span class="brand-name">LearnPro</span>
+    </div>
+    <div class="brand-sub">Votre académie IA personnelle</div>
+  </div>
+
+  <div class="filter-bar" id="filterBar"></div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- ═══ MODAL ═══ -->
+<div class="modal-overlay" id="modal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-title">✦ Nouvelle matière</div>
+    <input class="modal-input" id="mName" placeholder="Nom de la matière (ex: Droit du travail)">
+    <input class="modal-input" id="mDesc" placeholder="Description courte">
+    <div class="modal-label">Icône</div>
+    <div class="icon-grid" id="iconGrid"></div>
+    <div class="modal-label">Couleur</div>
+    <div class="color-grid" id="colorGrid"></div>
+    <div class="modal-row">
+      <button class="modal-cancel" onclick="closeModal()">Annuler</button>
+      <button class="modal-ok" id="modalOk" onclick="addSubject()">+ Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CHAT ═══ -->
+<div id="view-chat">
+  <div class="chat-top">
+    <button class="back-btn" onclick="goHome()">←</button>
+    <div class="chat-title-wrap">
+      <div class="chat-av-title">
+        <div class="chat-av" id="chatAv"></div>
+        <div class="chat-label" id="chatLabel"></div>
+      </div>
+      <div class="chat-sublabel" id="chatSub"></div>
+    </div>
+    <div class="top-actions">
+      <button class="top-btn stop" id="stopBtn" onclick="stopSpeaking()" style="display:none" title="Arrêter">⏹</button>
+      <button class="top-btn weak-btn" id="weakBtn" onclick="toggleWeak()" style="display:none" title="Points faibles">📊</button>
+    </div>
+  </div>
+
+  <div class="weak-panel" id="weakPanel" style="display:none">
+    <div class="weak-head">📊 Points à travailler</div>
+    <div id="weakList"></div>
+  </div>
+
+  <div class="chat-msgs" id="chatMsgs"></div>
+
+  <div class="chat-bar">
+    <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="Parler">🎙</button>
+    <input class="bar-input" id="barInput" placeholder="Votre question…" onkeydown="if(event.key==='Enter')sendMsg()">
+    <button class="send-btn" id="sendBtn" onclick="sendMsg()">➤</button>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const ICONS = ['📚','🔬','💻','🎨','📐','🏛','🧬','⚙️','📊','🌐','🎵','🏋️','🧪','🌍','📖'];
+const COLORS = ['#F59E0B','#10B981','#3B82F6','#8B5CF6','#EF4444','#EC4899','#14B8A6','#6366F1','#F97316'];
+
+let subjects = [
+  {id:'english',label:'Coach Anglais',icon:'🗣',color:'#F59E0B',tag:'VOCAL',desc:'Conversation naturelle + corrections instantanées',isEnglish:true},
+  {id:'iso45001',label:'ISO 45001',icon:'🦺',color:'#10B981',tag:'QHSE',desc:'Santé et sécurité au travail',isEnglish:false},
+  {id:'iso9001',label:'ISO 9001',icon:'✅',color:'#3B82F6',tag:'QHSE',desc:'Management de la qualité',isEnglish:false},
+  {id:'iso14001',label:'ISO 14001',icon:'🌿',color:'#06B6D4',tag:'QHSE',desc:'Management environnemental',isEnglish:false},
+  {id:'master',label:'Master QHSE',icon:'🎓',color:'#8B5CF6',tag:'MASTER',desc:'Cursus complet QHSE · audits · certifications',isEnglish:false},
+  {id:'risks',label:'Gestion des Risques',icon:'⚠️',color:'#EF4444',tag:'QHSE',desc:'DUERP, AMDEC, Bow-Tie, réglementation',isEnglish:false},
+];
+
+const PROMPTS = {
+  english:`You are Alex, a warm, natural English conversation coach. Personality: friendly, encouraging, slightly witty — like a native speaker friend who's a great teacher.
+
+RULES:
+1. Reply NATURALLY first — continue the conversation like a real person.
+2. After your natural reply, add "📝 Coach Note:" ONLY if there's something to correct.
+3. In Coach Note: point out errors kindly (grammar, word choice, pronunciation tips), give the correct form, explain WHY briefly. Mix French for clarity if needed.
+4. Every 5 exchanges, add "📊 Progress:" summarizing recurring weak points.
+5. Keep the conversation flowing — ask follow-up questions, be curious and engaging.
+6. Use natural contractions. Never sound robotic. Always reply in English.`,
+
+  iso45001:`Tu es un expert certifié ISO 45001 et formateur QHSE senior (15 ans d'expérience terrain).
+ISO 45001 = Système de Management Santé-Sécurité au Travail (SST).
+Pédagogie : exemples concrets → exigence normative → application → cas réel. Vocabulaire officiel (parties intéressées, leadership, planification, support, réalisation, évaluation, amélioration). Propose exercices pratiques. Fais des liens avec OHSAS 18001 et la HLS. Réponds en français.`,
+
+  iso9001:`Tu es expert certifié ISO 9001:2015 et auditeur qualité senior.
+ISO 9001 = Système de Management de la Qualité (SMQ). Structure HLS, approche processus & risques, PDCA, satisfaction client. Exercices : cartographie des processus, KPI, audits blancs. Vocabulaire ISO 9000:2015. Réponds en français.`,
+
+  iso14001:`Tu es expert certifié ISO 14001:2015 et consultant management environnemental.
+ISO 14001 = Système de Management Environnemental. Aspects/impacts, conformité réglementaire, cycle de vie, RSE, ODD. Exemples : bilan carbone, déchets, énergie. Exercices : ACV, plan d'action. Réponds en français.`,
+
+  master:`Tu es professeur de Master QHSE en école d'ingénieurs.
+Cursus : management intégré QSE, droit du travail/environnemental, audit & certification, analyse des risques (AMDEC, arbre des causes, 5M, HAZOP, Bow-Tie), indicateurs de performance, veille réglementaire, management de projet, culture sécurité, REX, leadership. Cours structurés, cas réels d'accidents, questions d'examen. Prépare aux certifications IRCA/IEMA/CQI. Réponds en français.`,
+
+  risks:`Tu es expert en gestion et prévention des risques professionnels et industriels.
+Domaines : risques physiques, chimiques, biologiques, RPS, organisationnels, environnementaux. Outils : DUERP, AMDEC, APR, arbre des causes, Bow-Tie, matrice de criticité. Réglementation française et européenne (Code du travail, SEVESO). Exercices pratiques. Réponds en français.`,
+};
+
+function getSysPrompt(s){
+  return PROMPTS[s.id] || `Tu es un expert pédagogue en "${s.label}". Explique avec clarté, exemples concrets et méthodes pratiques. Niveau progressif. Réponds en français.`;
+}
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let activeSubject = null;
+let messages = [];
+let isSpeaking = false;
+let isListening = false;
+let isLoading = false;
+let weakPoints = [];
+let weakVisible = false;
+let selIcon = ICONS[0];
+let selColor = COLORS[0];
+let filterTag = 'Tous';
+
+// ── RENDER HOME ───────────────────────────────────────────────────────────────
+function renderHome(){
+  const tags = ['Tous',...new Set(subjects.map(s=>s.tag))];
+  const fb = document.getElementById('filterBar');
+  fb.innerHTML = tags.map(t=>`<button class="ftag${filterTag===t?' on':''}" onclick="setFilter('${t}')">${tagLabel(t)}</button>`).join('');
+
+  const grid = document.getElementById('grid');
+  const shown = filterTag==='Tous' ? subjects : subjects.filter(s=>s.tag===filterTag);
+  grid.innerHTML = shown.map(s=>`
+    <div class="card" style="--c:${s.color}" onclick="openChat('${s.id}')">
+      <div class="card-tag">${s.tag}</div>
+      <div class="card-icon">${s.icon}</div>
+      <div class="card-name">${s.label}</div>
+      <div class="card-desc">${s.desc}</div>
+      ${s.isEnglish?'<div class="vocal-badge">🎙 VOCAL · CORRECTIONS IA</div>':''}
+    </div>
+  `).join('') + `
+    <div class="card add-card" onclick="openModal()">
+      <div class="add-plus">+</div>
+      <div class="card-name">Ajouter une matière</div>
+      <div class="card-desc">Personnalisez votre cursus</div>
+    </div>`;
+}
+
+function tagLabel(t){
+  return t==='VOCAL'?'🎙 VOCAL':t==='QHSE'?'🛡 QHSE':t==='MASTER'?'🎓 MASTER':t==='CUSTOM'?'✨ CUSTOM':'Tous';
+}
+function setFilter(t){filterTag=t;renderHome();}
+
+// ── MODAL ────────────────────────────────────────────────────────────────────
+function openModal(){
+  selIcon=ICONS[0]; selColor=COLORS[0];
+  document.getElementById('mName').value='';
+  document.getElementById('mDesc').value='';
+  document.getElementById('iconGrid').innerHTML=ICONS.map(ic=>`<button class="icon-pick${ic===selIcon?' sel':''}" onclick="pickIcon('${ic}',this)">${ic}</button>`).join('');
+  document.getElementById('colorGrid').innerHTML=COLORS.map(c=>`<div class="color-dot${c===selColor?' sel':''}" style="background:${c}" onclick="pickColor('${c}',this)"></div>`).join('');
+  document.getElementById('modal').style.display='flex';
+  checkModalOk();
+}
+function closeModal(){document.getElementById('modal').style.display='none';}
+function pickIcon(ic,el){selIcon=ic;document.querySelectorAll('.icon-pick').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');}
+function pickColor(c,el){selColor=c;document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('sel'));el.classList.add('sel');}
+function checkModalOk(){document.getElementById('modalOk').disabled=!document.getElementById('mName').value.trim();}
+document.addEventListener('input',e=>{if(e.target.id==='mName')checkModalOk();});
+function addSubject(){
+  const name=document.getElementById('mName').value.trim();
+  const desc=document.getElementById('mDesc').value.trim();
+  if(!name)return;
+  subjects.push({id:'c'+Date.now(),label:name,icon:selIcon,color:selColor,tag:'CUSTOM',desc:desc||'Matière personnalisée',isEnglish:false});
+  closeModal();
+  filterTag='Tous';
+  renderHome();
+}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeModal();});
+
+// ── OPEN CHAT ────────────────────────────────────────────────────────────────
+function openChat(id){
+  activeSubject = subjects.find(s=>s.id===id);
+  messages = [];
+  weakPoints = [];
+  weakVisible = false;
+  document.body.classList.add('show-chat');
+
+  // Header
+  const av = document.getElementById('chatAv');
+  av.textContent = activeSubject.icon;
+  av.style.background = activeSubject.color+'22';
+  av.style.color = activeSubject.color;
+  document.getElementById('chatLabel').textContent = activeSubject.label;
+  document.getElementById('chatSub').textContent = activeSubject.desc;
+  document.getElementById('barInput').placeholder = activeSubject.isEnglish ? 'Type or speak in English…' : 'Votre question…';
+  document.getElementById('weakBtn').style.display = activeSubject.isEnglish?'flex':'none';
+  document.getElementById('weakPanel').style.display='none';
+
+  document.getElementById('chatMsgs').innerHTML='';
+
+  const greeting = activeSubject.isEnglish
+    ? "Hey! I'm Alex, your personal English coach 😊 We'll have real conversations — and I'll correct your mistakes naturally as we go, tracking your progress over time.\n\nSo, what's on your mind today? Or would you prefer to practice around a specific topic like work, travel, or daily life?"
+    : `Bonjour ! Je suis votre formateur expert en **${activeSubject.label}**.\n\nNous allons travailler de façon progressive et pratique. Par où souhaitez-vous commencer ?\n\n• Vue d'ensemble et enjeux\n• Un concept ou chapitre spécifique\n• Exercice pratique ou cas concret\n• Préparation à la certification`;
+
+  appendMsg('assistant', greeting);
+  if(activeSubject.isEnglish) speak(greeting);
+}
+
+function goHome(){
+  stopSpeaking();
+  document.body.classList.remove('show-chat');
+  document.getElementById('weakPanel').style.display='none';
+  weakVisible=false;
+}
+
+// ── MESSAGES ─────────────────────────────────────────────────────────────────
+function appendMsg(role, text){
+  const box = document.getElementById('chatMsgs');
+  const row = document.createElement('div');
+  row.className = `msg-row ${role}`;
+
+  if(role==='assistant'){
+    const av = document.createElement('div');
+    av.className='msg-ava';
+    av.style.background = activeSubject.color;
+    av.textContent = activeSubject.isEnglish?'A':activeSubject.icon;
+    row.appendChild(av);
+  }
+
+  const bub = document.createElement('div');
+  bub.className='bubble';
+  bub.innerHTML = formatText(text);
+  row.appendChild(bub);
+  box.appendChild(row);
+  box.scrollTop = box.scrollHeight;
+}
+
+function formatText(t){
+  return t
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/(📝 Coach Note:)/g,'<span class="coach-note">$1</span>')
+    .replace(/(📊 Progress:|📊 Progression\s*:)/g,'<span class="progress-note">$1</span>')
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\n/g,'<br>');
+}
+
+function showTyping(){
+  const box = document.getElementById('chatMsgs');
+  const row = document.createElement('div');
+  row.className='msg-row assistant'; row.id='typing-row';
+  const av = document.createElement('div');
+  av.className='msg-ava'; av.style.background=activeSubject.color;
+  av.textContent=activeSubject.isEnglish?'A':activeSubject.icon;
+  const bub = document.createElement('div');
+  bub.className='bubble typing-dots';
+  bub.innerHTML='<span></span><span></span><span></span>';
+  row.appendChild(av); row.appendChild(bub);
+  box.appendChild(row);
+  box.scrollTop=box.scrollHeight;
+}
+function hideTyping(){const t=document.getElementById('typing-row');if(t)t.remove();}
+
+// ── SEND ──────────────────────────────────────────────────────────────────────
+async function sendMsg(text){
+  const input = document.getElementById('barInput');
+  const t = text!==undefined ? text : input.value.trim();
+  if(!t || isLoading) return;
+  input.value='';
+  isLoading=true;
+  toggleSendState(true);
+
+  messages.push({role:'user',content:t});
+  appendMsg('user',t);
+  showTyping();
+
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:getSysPrompt(activeSubject),
+        messages:messages
+      })
+    });
+    const data = await res.json();
+    const reply = data.content?.[0]?.text || 'Erreur de réponse.';
+    hideTyping();
+    messages.push({role:'assistant',content:reply});
+    appendMsg('assistant',reply);
+    if(activeSubject.isEnglish){extractWeakPoints(reply);}
+    speak(reply);
+  }catch(e){
+    hideTyping();
+    appendMsg('assistant','⚠️ Erreur de connexion. Vérifiez votre accès internet.');
+  }
+  isLoading=false;
+  toggleSendState(false);
+}
+
+function toggleSendState(loading){
+  document.getElementById('sendBtn').disabled=loading;
+  document.getElementById('micBtn').disabled=loading;
+}
+
+// ── WEAK POINTS ───────────────────────────────────────────────────────────────
+function extractWeakPoints(text){
+  const m = text.match(/📝 Coach Note:([\s\S]*?)(?=📊|$)/);
+  if(m){
+    const line = m[1].trim().split('\n')[0].slice(0,90);
+    if(line && !weakPoints.includes(line)){
+      weakPoints.push(line);
+      if(weakPoints.length>6)weakPoints.shift();
+    }
+  }
+  renderWeakPanel();
+}
+function renderWeakPanel(){
+  const list=document.getElementById('weakList');
+  if(weakPoints.length===0){list.innerHTML='<div class="weak-empty">Continue à pratiquer — tes points faibles apparaîtront ici.</div>';return;}
+  list.innerHTML=weakPoints.map(w=>`<div class="weak-item"><span class="weak-dot">▸</span>${w}</div>`).join('');
+}
+function toggleWeak(){
+  weakVisible=!weakVisible;
+  renderWeakPanel();
+  document.getElementById('weakPanel').style.display=weakVisible?'block':'none';
+}
+
+// ── SPEECH ────────────────────────────────────────────────────────────────────
+function speak(text){
+  if(!window.speechSynthesis)return;
+  stopSpeaking();
+  const clean=text.replace(/[#*_`]/g,'').replace(/📝 Coach Note:|📊 Progress:|📊 Progression\s*:/g,'').replace(/<[^>]+>/g,'').trim().slice(0,700);
+  const u=new SpeechSynthesisUtterance(clean);
+  u.lang=activeSubject?.isEnglish?'en-US':'fr-FR';
+  u.rate=activeSubject?.isEnglish?0.91:0.94;
+  u.onstart=()=>{isSpeaking=true;document.getElementById('stopBtn').style.display='flex';};
+  u.onend=u.onerror=()=>{isSpeaking=false;document.getElementById('stopBtn').style.display='none';};
+  window.speechSynthesis.speak(u);
+}
+function stopSpeaking(){
+  window.speechSynthesis?.cancel();
+  isSpeaking=false;
+  const s=document.getElementById('stopBtn');
+  if(s)s.style.display='none';
+}
+
+// ── MIC ───────────────────────────────────────────────────────────────────────
+function toggleMic(){
+  if(isListening){stopListening();return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert('Reconnaissance vocale : utilisez Chrome ou Edge.');return;}
+  stopSpeaking();
+  const rec=new SR();
+  rec.lang=activeSubject?.isEnglish?'en-US':'fr-FR';
+  rec.continuous=false;
+  rec.onstart=()=>{isListening=true;const m=document.getElementById('micBtn');m.classList.add('live');m.innerHTML='🔴<span class="pulse"></span>';};
+  rec.onend=()=>{isListening=false;const m=document.getElementById('micBtn');m.classList.remove('live');m.innerHTML='🎙';};
+  rec.onerror=()=>{isListening=false;const m=document.getElementById('micBtn');m.classList.remove('live');m.innerHTML='🎙';};
+  rec.onresult=(e)=>{sendMsg(e.results[0][0].transcript);};
+  rec.start();
+  window._rec=rec;
+}
+function stopListening(){if(window._rec){try{window._rec.stop();}catch(e){}}}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+renderHome();
+</script>
+</body>
+</html>
